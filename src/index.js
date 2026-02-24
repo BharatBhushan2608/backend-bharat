@@ -1,18 +1,24 @@
 // require('dotenv').config({path : './env'}); // old way of importing dotenv
-import dotenv from "dotenv"; // new way of importing dotenv
+//import dotenv from "dotenv"; // new way of importing dotenv
 
 import mongoose from "mongoose";
 import { DB_NAME } from "./constants.js";
 import connectDB from "./db/index.js";
+import {app} from "./app.js";
+
+
+import dotenv from "dotenv";
+dotenv.config();
 
 
 
 
-dotenv.config({
-    path : "./.env"
-});
+// dotenv.config({
+//     path : "./.env"
+// });
 
 connectDB()
+
 .then( () => {
     app.on( "error" ,(error) =>{
         console.log("ERRRR:" , error);
@@ -26,7 +32,11 @@ connectDB()
     console.log("MONGo DB connection failed" , err)
 })
 
+console.log("PORT:", process.env.PORT);
+console.log("CLOUD:", process.env.CLOUDINARY_CLOUD_NAME);
 
+// running from the root directory of the project, so it can access .env file and other files in the project
+console.log("RUNNING FROM:", process.cwd());
  
 
 
