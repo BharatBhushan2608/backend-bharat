@@ -225,6 +225,7 @@ const logoutUser= asyncHandler(async (req , res) => {
 */
 
 const refreshAccessToken = asyncHandler(async (req , res) => {
+   
     const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken;
 
     if(!incomingRefreshToken){
@@ -274,9 +275,143 @@ const refreshAccessToken = asyncHandler(async (req , res) => {
 }) 
 
 
+const changeCurrentPassword = asyncHandler(async(req , res) => {
+    // get current password and new password from req.body
+    // validate that current password and new password are not empty
+    // find user by id from database
+    // if user not found throw error
+    // if user found then compare current password using bcrypt.compare()
+    // if current password is incorrect throw error
+    // if current password is correct then hash the new password using bcrypt.hash()
+    // update the user document with new password and save
+    // return response with success message
+ 
+    const {oldPassword , newPassword} = req.body
+
+    const user = await User.findById(req.user?._id);
+    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
+
+    if(!isPasswordCorrect){
+        throw new ApiError(400 , "old password is incorrect");
+    }
+
+    user.password = newPassword;
+    await user.save({ validateBeforeSave: false });
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200 , {} , "password changed successfully"))
+
+    
+}) 
+
+const getCurrentUser = asyncHandler(async (req , res) => {
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200 , req.user , "current user fetched successfully"))
+})
+
+const updateAccountDetails = asyncHandler(async (req , res) => {
+
+    const {fullName , email} = req.body
+
+    if(!fullName && !email){
+        throw new ApiError(400 , "All is required to update")
+    }
+
+    const user = User.findByIdAndUpdate(
+        req.user._id,
+        {
+            $set : {
+                fullName, // u can also write fullName : fullName but in ES6 if key and value both are same then u can write just one time like this fullName ,
+                email
+            }
+        }, 
+        {new : true}
+    ).select("-password")
+
+    return res
+    .status(200)
+    .json(new ApiResponse(200 , user , "Account details updated successfully"))
+})
+
+
+const updateUserAvatar = asyncHandler(async (req , res) => {
+
+    const avatarLocalPath = req.file?.path
+
+    if(!avatarLocalPath){
+        throw new ApiError(400 , "Avatar file is missing")
+    }
+
+    const avatar = await uploadOnCloudinary(avatarLocalPath)
+
+    if(!avatar.url){
+        throw new ApiError(400 , "Failed to upload avatar on cloudinary")
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set : {
+                avatar: avatar.url
+            } 
+        },
+         { new: true }
+    ).select("-password")
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse
+        (200 , user , "avatar image  updated successfully"))
+})
+
+
+const updateUserCoverImage = asyncHandler(async (req , res) => {
+
+    const coverImageLocalPath = req.file?.path
+
+    if(!coverImageLocalPath){
+        throw new ApiError(400 , "Cover image file is missing")
+    }
+
+    const coverImage = await uploadOnCloudinary(coverImageLocalPath)
+
+    if(!coverImage.url){
+        throw new ApiError(400 , "Failed to upload cover image on cloudinary")
+    }
+
+    const user = await User.findByIdAndUpdate(
+        req.user?._id,
+        {
+            $set : {
+                coverImage: coverImage.url
+            } 
+        },
+         { new: true }
+    ).select("-password")
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse
+        (200 , user , "cover image  updated successfully"))
+})
+
+
+
+ 
+
 export {
     registerUser,
     loginUser,
     logoutUser,
-    refreshAccessToken
+    refreshAccessToken,
+    changeCurrentPassword,
+    getCurrentUser,
+    updateAccountDetails,
+    updateUserAvatar,
+    updateUserCoverImage
 };
