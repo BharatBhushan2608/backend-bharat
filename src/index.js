@@ -10,6 +10,10 @@ import {app} from "./app.js";
 import dotenv from "dotenv";
 dotenv.config();
 
+import dns from "dns";
+// Ensure Node uses reliable public DNS for SRV lookups (workaround for local DNS stub issues)
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
+
 
 
 
